@@ -1,0 +1,56 @@
+package com.arth.auth;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.arth.auth.model.AuthRequest;
+import com.arth.auth.model.User;
+import com.arth.auth.persist.UserRepository;
+import com.arth.auth.utility.JwtUtil;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Map;
+
+@RestController
+@RequestMapping("/auth")
+public class AuthController {
+
+    private  UserRepository userRepository;
+    private  PasswordEncoder passwordEncoder;
+    private  JwtUtil jwtUtil;
+    private  AuthenticationManager authenticationManager;
+
+    public AuthController(UserRepository userRepository,
+                          PasswordEncoder passwordEncoder,
+                          JwtUtil jwtUtil,
+                          AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.authenticationManager = authenticationManager;
+    }
+
+    @PostMapping("/register")
+    public String register(@RequestBody User user) {
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
+        return "User registered successfully";
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() ->new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+        String token = jwtUtil.generateToken(request.getUsername());
+        return ResponseEntity.ok(Map.of("token",token));
+    }
+}
+
