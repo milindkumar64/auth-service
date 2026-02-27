@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,18 +39,24 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
+    public ResponseEntity<String> register(@RequestBody User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
-        return "User registered successfully";
+        return ResponseEntity.ok("User registered successfully");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest request) {
-        userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() ->new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED, "Invalid username or password"));
-        String token = jwtUtil.generateToken(request.getUsername());
+    public ResponseEntity<Map> login(@RequestBody AuthRequest request) {
+
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+        );
+
+        User user  = (User) authentication.getPrincipal();
+//        userRepository.findByUsername(request.getUsername())
+//                .orElseThrow(() ->new ResponseStatusException(
+//                        HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+        String token = jwtUtil.generateToken(user);
         return ResponseEntity.ok(Map.of("token",token));
     }
 }

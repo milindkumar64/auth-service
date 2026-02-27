@@ -1,11 +1,16 @@
 package com.arth.auth.model;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.*;
-import lombok.Data;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Table(name = "users",schema = "auth")
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +23,19 @@ public class User {
 
     private String email;
 
-    private String role; // ROLE_USER, ROLE_ADMIN
+    @ManyToMany
+    @JoinTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    private Set<Role> roles;   // ROLE_USER, ROLE_ADMIN
+
+    /**
+     * @return
+     */
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
 
     public Long getId() {
         return id;
@@ -52,11 +69,10 @@ public class User {
         this.email = email;
     }
 
-    public String getRole() {
-        return role;
+    public Set<Role> getRoles() {
+        return roles;
     }
-
-    public void setRole(String role) {
-        this.role = role;
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 }
