@@ -1,12 +1,11 @@
 package com.arth.auth.utility;
 
-import com.arth.auth.service.CustomUserDetailsService;
+import com.arth.auth.service.UserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,9 +19,9 @@ import java.io.IOException;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private  JwtUtil jwtUtil;
-    private  CustomUserDetailsService userDetailsService;
+    private UserDetailService userDetailsService;
 
-    public JwtAuthFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+    public JwtAuthFilter(JwtUtil jwtUtil, UserDetailService userDetailsService) {
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
     }

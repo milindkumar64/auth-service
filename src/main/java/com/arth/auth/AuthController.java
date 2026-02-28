@@ -1,6 +1,7 @@
 package com.arth.auth;
 
-import org.springframework.http.HttpStatus;
+import com.arth.auth.dto.RegisterRequest;
+import com.arth.auth.service.UserDetailService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,7 +16,6 @@ import com.arth.auth.model.AuthRequest;
 import com.arth.auth.model.User;
 import com.arth.auth.persist.UserRepository;
 import com.arth.auth.utility.JwtUtil;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
@@ -24,24 +24,24 @@ import java.util.Map;
 public class AuthController {
 
     private  UserRepository userRepository;
-    private  PasswordEncoder passwordEncoder;
     private  JwtUtil jwtUtil;
     private  AuthenticationManager authenticationManager;
 
+    private UserDetailService customUserDetailsService;
     public AuthController(UserRepository userRepository,
                           PasswordEncoder passwordEncoder,
                           JwtUtil jwtUtil,
-                          AuthenticationManager authenticationManager) {
+                          AuthenticationManager authenticationManager,
+                          UserDetailService customUserDetailsService){
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.authenticationManager = authenticationManager;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+    public ResponseEntity<String> register(@RequestBody RegisterRequest registerRequest) {
+        customUserDetailsService.registerUser(registerRequest);
         return ResponseEntity.ok("User registered successfully");
     }
 

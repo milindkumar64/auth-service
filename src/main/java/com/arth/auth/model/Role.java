@@ -5,13 +5,12 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.security.PublicKey;
 import java.util.Set;
 
 @Entity
 @Table(name = "roles",schema = "auth")
 @ToString(exclude = {"users"})
-@AllArgsConstructor
-@NoArgsConstructor
 public class Role {
 
     @Id
@@ -37,5 +36,13 @@ public class Role {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Set<User> getUsers() {
+        return users;
+    }
+
+    public void setUsers(Set<User> users) {
+        this.users = users;
     }
 }

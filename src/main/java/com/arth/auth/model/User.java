@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,8 +24,10 @@ public class User implements UserDetails {
 
     private String email;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "user_roles",
+            schema = "auth",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles;   // ROLE_USER, ROLE_ADMIN
