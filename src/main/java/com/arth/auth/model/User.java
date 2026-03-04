@@ -6,11 +6,15 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+
 @Entity
 @Table(name = "users",schema = "auth")
+//@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class User implements UserDetails {
 
     @Id
@@ -30,6 +34,7 @@ public class User implements UserDetails {
             schema = "auth",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
+//    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Set<Role> roles;   // ROLE_USER, ROLE_ADMIN
 
     /**
@@ -77,5 +82,9 @@ public class User implements UserDetails {
     }
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public String fetchRoles(){
+        return roles.toString();
     }
 }

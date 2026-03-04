@@ -3,6 +3,7 @@ package com.arth.auth.service;
 import com.arth.auth.model.Customer;
 import com.arth.auth.model.Order;
 import com.arth.auth.persist.CustomerRepository;
+import jakarta.persistence.EntityManager;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

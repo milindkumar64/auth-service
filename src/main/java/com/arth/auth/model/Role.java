@@ -1,16 +1,16 @@
 package com.arth.auth.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import java.security.PublicKey;
 import java.util.Set;
 
 @Entity
 @Table(name = "roles",schema = "auth")
 @ToString(exclude = {"users"})
+//@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Role {
 
     @Id
