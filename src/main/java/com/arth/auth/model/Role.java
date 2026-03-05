@@ -1,5 +1,6 @@
 package com.arth.auth.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.ToString;
 import org.hibernate.annotations.Cache;
@@ -18,6 +19,7 @@ public class Role {
     private Long id;
     private String name; // e.g., ROLE_USER, ROLE_ADMIN
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;   // Users having this role
 

@@ -51,22 +51,23 @@ public class UserDetailService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
 
         log.debug("loadUserByUsername ->IN: loading user .... {}", username);
-        User user = userRepository.findByUsername(username)
+        UserDetails user = (UserDetails) userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        // Convert user roles to Spring Security authorities
+/*
         List<GrantedAuthority> authorities =
                 user.getRoles().stream()
                         .map(role -> new SimpleGrantedAuthority(role.getName()))
                         .collect(Collectors.toList());
         log.info("User {} has roles: {}", username, authorities);
+*/
 
-        return org.springframework.security.core.userdetails.User
+         user =  org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPassword())
-                .authorities(authorities)
+                .authorities(user.getAuthorities())
                 .build();
-
+         return  user;
 //            return userRepository.findByUsername(username)
 //                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }

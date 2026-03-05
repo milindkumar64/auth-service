@@ -59,6 +59,7 @@ public class CustOrderService {
 
     public List<Order> checkOrder (String custName){
 
+        log.info("checking Orders for customer : {}", custName);
         List<Order> orders = customerRepository.findOrderbyCustomer(custName);
         log.info("Orders for customer {}: {}", custName, orders.toString());
         return orders;
