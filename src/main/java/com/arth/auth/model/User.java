@@ -1,11 +1,23 @@
 package com.arth.auth.model;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
 
 @Entity
 @Table(name = "users",schema = "auth")
-public class User {
+//@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,7 +30,25 @@ public class User {
 
     private String email;
 
-    private String role; // ROLE_USER, ROLE_ADMIN
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(name = "user_roles",
+            schema = "auth",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
+//    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
+    private Set<Role> roles;   // ROLE_USER, ROLE_ADMIN
+
+    /**
+     * @return
+     * Convert user roles to Spring Security authorities
+     */
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles.stream()
+                .map(r -> new SimpleGrantedAuthority(r.getName()))
+                .collect(Collectors.toList());
+    }
 
     public Long getId() {
         return id;
@@ -52,11 +82,14 @@ public class User {
         this.email = email;
     }
 
-    public String getRole() {
-        return role;
+    public Set<Role> getRoles() {
+        return roles;
+    }
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public String fetchRoles(){
+        return roles.toString();
     }
 }

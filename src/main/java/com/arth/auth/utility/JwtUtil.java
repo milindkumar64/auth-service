@@ -2,8 +2,10 @@ package com.arth.auth.utility;
 
 import java.util.Date;
 
+import com.arth.auth.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Jwts;
@@ -19,10 +21,13 @@ public class JwtUtil {
     private long jwtExpirationMs;
 
 
-    public String generateToken(String username) {
-        return Jwts.builder().setSubject(username).setIssuedAt(new Date())
+    public String generateToken(UserDetails user) {
+        return Jwts.builder().setSubject(user.getUsername())
+                .claim("role", user.getUsername())
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis()+jwtExpirationMs))
-                .signWith(SignatureAlgorithm.HS256, jwtSecret).compact();
+                .signWith(SignatureAlgorithm.HS256, jwtSecret)
+                .compact();
     }
     public String extractUsername(String token) {
         return Jwts.parser()
