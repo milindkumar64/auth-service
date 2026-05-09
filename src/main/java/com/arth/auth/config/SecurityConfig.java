@@ -43,7 +43,7 @@ public class SecurityConfig {
                         })
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/customer/check-order").hasRole("ADMIN")
+                        .requestMatchers("/customer/check-order","/customer/cust-order").hasRole("USER")
                         .requestMatchers("/auth/register", "/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )

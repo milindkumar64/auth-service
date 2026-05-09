@@ -23,20 +23,20 @@ public class CustOrderService {
     private  CustomerRepository customerRepository;
 
     @Transactional
-    public void saveCustomerWithOrderDetails() {
+    public void saveCustomerWithOrderDetails(String custName) {
         // Simulate saving order with customer details
         log.debug("Saving Customer with order details...");
 
         Customer customer = new Customer();
-        customer.setName("John Doe");
+        customer.setName(custName);
 
         Order order1 = new Order();
-        order1.setProduct("Laptop");
+        order1.setProduct(custName + ": Laptop");
         order1.setQuantity(1);
         order1.setCustomer(customer); // Set the customer reference in the order
 
         Order order2 = new Order();
-        order2.setProduct("Mouse");
+        order2.setProduct(custName+ ": Mouse");
         order2.setQuantity(2);
         order2.setCustomer(customer); // Set the customer reference in the order
 
