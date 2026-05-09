@@ -15,9 +15,9 @@ public class CutomerOrderController {
     private CustOrderService custOrderService;
 
     @PostMapping("/cust-order")
-    public String placeOrder() {
+    public String placeOrder(@RequestParam String custName) {
         // In a real application, you would process the order details and save it to the database
-        custOrderService.saveCustomerWithOrderDetails();
+        custOrderService.saveCustomerWithOrderDetails(custName);
         return "Order placed successfully: ";
     }
 

@@ -54,13 +54,11 @@ public class UserDetailService implements UserDetailsService {
         UserDetails user = (UserDetails) userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-/*
         List<GrantedAuthority> authorities =
-                user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                user.getAuthorities().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getAuthority()))
                         .collect(Collectors.toList());
         log.info("User {} has roles: {}", username, authorities);
-*/
 
          user =  org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
