@@ -61,5 +61,10 @@ public class AuthController {
         UserDetail userDetail = customUserDetailsService.findUser(username);
         return ResponseEntity.ok(userDetail);
     }
+
+    @GetMapping("/hello")
+    public String helloWorld(){
+        return "Hello World ! - Welcome to Auth Service";
+    }
 }
 
