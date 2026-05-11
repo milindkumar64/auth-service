@@ -103,6 +103,8 @@
 	</dependencies>
 
 	<build>
+		<!--<finalName> will package jar with this name in target/* -->
+		<finalName>auth-service</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
