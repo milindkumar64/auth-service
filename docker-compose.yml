@@ -5,7 +5,8 @@ services:
     ports:
       - 8081:8081
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy  # Dynamic Dependency!
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/postgres
       SPRING_DATASOURCE_USERNAME: root
@@ -26,6 +27,11 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data              # for data persistence - docker compose down -v --- to down volume and network and container
 #      - ./src/main/resources/schema-postgres.sql:/docker-entrypoint-initdb.d/init.sql    # for schema creation
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   my-network:
