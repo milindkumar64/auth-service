@@ -1,10 +1,13 @@
 package com.arth.auth.config;
 
 import com.arth.auth.utility.JwtAuthFilter;
-import jakarta.servlet.http.HttpServletResponse;
+import com.arth.auth.security.OAuth2SuccessHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -21,9 +24,14 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    private static final Logger log = (Logger) LoggerFactory.getLogger(SecurityConfig.class);
+
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, OAuth2SuccessHandler oAuth2SuccessHandler) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.oAuth2SuccessHandler = oAuth2SuccessHandler;
     }
 
     @Bean
@@ -31,24 +39,36 @@ public class SecurityConfig {
 
         http.cors(cors -> cors.configurationSource(configurationSource()))
                 .csrf(csrf -> csrf.disable())
-                .exceptionHandling(exception -> exception
+                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+/*                .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, ex) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
-                            response.getWriter().write("{\"errorMessage\":\"Unauthorized Access\"}");
+                            response.getWriter().write("{\"errorMessage\":\"Unauthorized Access1\"}");
                         }).accessDeniedHandler((request, response, ex) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType("application/json");
                             response.getWriter().write("{\"errorMessage\":\"Access Denied\"}");
                         })
-                )
+                )*/
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/customer/check-order","/customer/cust-order").hasRole("USER")
                         .requestMatchers("/auth/register", "/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        http.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .oauth2Login(oAuth2 -> oAuth2.failureHandler((request, response, exception) -> {
+                    log.error("OAuth2 login failed: {}", exception.getMessage());
+/*                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    try {
+                        response.getWriter().write("{\"errorMessage\":\"OAuth2 Login Failed\"}");
+                    } catch (Exception e) {
+                        log.error("Error writing OAuth2 failure response: {}", e.getMessage());
+                    }*/
+                                 })
+                                .successHandler(oAuth2SuccessHandler)
+                );
 
         return http.build();
     }

@@ -37,6 +37,11 @@
 			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 
+		<!-- OAuth2 client- to make backend as client to call auth server  -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
+		</dependency>
 		<!-- Web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

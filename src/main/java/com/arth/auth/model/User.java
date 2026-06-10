@@ -1,14 +1,12 @@
 package com.arth.auth.model;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.arth.auth.model.AuthProviderType.AuthProviderType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,7 +27,9 @@ public class User implements UserDetails {
     private String password;
 
     private String email;
-
+    private String providerId;
+    @Enumerated(EnumType.STRING)
+    private AuthProviderType providerType;
     @JsonIgnore
     @ManyToMany
     @JoinTable(name = "user_roles",
@@ -91,5 +91,21 @@ public class User implements UserDetails {
 
     public String fetchRoles(){
         return roles.toString();
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
+    }
+
+    public AuthProviderType getProviderType() {
+        return providerType;
+    }
+
+    public void setProviderType(AuthProviderType providerType) {
+        this.providerType = providerType;
     }
 }

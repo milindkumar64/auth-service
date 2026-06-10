@@ -1,5 +1,6 @@
 package com.arth.auth.persist;
 
+import com.arth.auth.model.AuthProviderType.AuthProviderType;
 import com.arth.auth.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,4 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT U from User U left join fetch U.roles where U.username = :username")
     Optional<User> findByUsername(String username);
+
+    Optional<User> findByProviderIdAndProviderType(String providerId, AuthProviderType providerType);
+
+    Optional<User> findByEmail(String email);
 }
