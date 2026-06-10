@@ -1,16 +1,12 @@
-package com.arth.auth.model;
+package com.arth.auth.dto;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
-public class AuthRequest {
+public class LoginRequest {
     private String username;
     private String password;
     // getters & setters
 
 
-    public AuthRequest(String username, String password) {
+    public LoginRequest(String username, String password) {
         this.username = username;
         this.password = password;
     }
