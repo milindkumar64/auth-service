@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -14,6 +16,9 @@ import org.springframework.stereotype.Service;
 
 import com.arth.auth.model.User;
 import com.arth.auth.persist.UserRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserDetailService implements UserDetailsService {
@@ -39,13 +44,11 @@ public class UserDetailService implements UserDetailsService {
         UserDetails user = (UserDetails) userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-/*
         List<GrantedAuthority> authorities =
-                user.getRoles().stream()
-                        .map(role -> new SimpleGrantedAuthority(role.getName()))
+                user.getAuthorities().stream()
+                        .map(role -> new SimpleGrantedAuthority(role.getAuthority()))
                         .collect(Collectors.toList());
         log.info("User {} has roles: {}", username, authorities);
-*/
 
 //         user =  org.springframework.security.core.userdetails.User   // REMOVED: this builder strips the id field,
 //                .withUsername(user.getUsername())                       // causing ClassCastException in AuthController.
