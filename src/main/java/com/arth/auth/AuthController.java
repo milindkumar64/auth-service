@@ -1,13 +1,14 @@
 package com.arth.auth;
 
 import com.arth.auth.dto.LoginResponse;
+import com.arth.auth.dto.RefreshTokenRequest;
 import com.arth.auth.dto.RegisterRequest;
 import com.arth.auth.dto.UserDetail;
 import com.arth.auth.model.User;
-import com.arth.auth.security.AuthService;
+import com.arth.auth.service.TokenService;
 import com.arth.auth.service.UserDetailService;
 import com.arth.auth.service.UserRegisterService;
-import com.arth.auth.utility.JwtUtil;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -15,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.arth.auth.dto.LoginRequest;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -26,16 +29,16 @@ public class AuthController {
 
     private AuthenticationManager authenticationManager;
 
-    private JwtUtil jwtUtil;
+    private TokenService tokenService;
+
     public AuthController(UserDetailService customUserDetailsService,
                           UserRegisterService userRegisterService,
                           AuthenticationManager authenticationManager,
-                          JwtUtil jwtUtil){
+                          TokenService tokenService) {
         this.customUserDetailsService = customUserDetailsService;
         this.userRegisterService = userRegisterService;
         this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-
+        this.tokenService = tokenService;
     }
 
     @PostMapping("/register")
@@ -51,8 +54,18 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
         User user = (User) authentication.getPrincipal();
-        String token = jwtUtil.generateToken(user);
-        return ResponseEntity.ok(new LoginResponse(token, user.getId()));
+        return ResponseEntity.ok(tokenService.issueTokenPair(user));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(tokenService.refresh(request.getRefreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(@Valid @RequestBody RefreshTokenRequest request) {
+        tokenService.revoke(request.getRefreshToken());
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 
     @PostMapping("/getUsername/{username}")

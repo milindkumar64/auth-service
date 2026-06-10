@@ -60,6 +60,12 @@ public class UserDetailService implements UserDetailsService {
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
+    public UserDetails loadUserById(Long userId) {
+        log.debug("loadUserById -> loading user id {}", userId);
+        return userRepository.findByIdWithRoles(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+    }
+
 /*
     @Transactional
     public  SignUpRequest registerUser(RegisterRequest registerRequest){

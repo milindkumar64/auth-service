@@ -45,11 +45,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 if (!jwtUtil.validateToken(token)) {
                     throw new BadCredentialsException("Invalid JWT token");
                 }
-                    String username = jwtUtil.extractUsername(token);
+                    Long userId = jwtUtil.extractUserId(token);
 
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UserDetails userDetails = userDetailsService.loadUserById(userId);
 
-                    log.debug("loaded user role : {}", userDetails.getAuthorities().toString());
+                    log.debug("Authenticated user id {} with roles {}", userId, userDetails.getAuthorities());
 
                     UsernamePasswordAuthenticationToken auth =
                             new UsernamePasswordAuthenticationToken(
