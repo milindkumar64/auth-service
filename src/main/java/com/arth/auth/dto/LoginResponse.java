@@ -1,30 +1,83 @@
 package com.arth.auth.dto;
 
 public class LoginResponse {
-    String jwt;
-    Long userId;
+
+    private String accessToken;
+    private String refreshToken;
+    private Long userId;
+    private long expiresIn;
+    private long refreshExpiresIn;
+    private String tokenType;
 
     public LoginResponse() {
     }
 
-    public LoginResponse(String jwt, Long userId) {
-        this.jwt = jwt;
+    public LoginResponse(String accessToken, String refreshToken, Long userId,
+                         long expiresIn, long refreshExpiresIn, String tokenType) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
         this.userId = userId;
+        this.expiresIn = expiresIn;
+        this.refreshExpiresIn = refreshExpiresIn;
+        this.tokenType = tokenType;
     }
 
-    public String getJwt() {
-        return jwt;
+    public static LoginResponse of(String accessToken, String refreshToken, Long userId,
+                                   long accessExpirationMs, long refreshExpirationMs) {
+        return new LoginResponse(
+                accessToken,
+                refreshToken,
+                userId,
+                accessExpirationMs / 1000,
+                refreshExpirationMs / 1000,
+                "Bearer");
     }
 
-    public void setJwt(String jwt) {
-        this.jwt = jwt;
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
     }
 
     public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(String username) {
+    public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public long getExpiresIn() {
+        return expiresIn;
+    }
+
+    public void setExpiresIn(long expiresIn) {
+        this.expiresIn = expiresIn;
+    }
+
+    public long getRefreshExpiresIn() {
+        return refreshExpiresIn;
+    }
+
+    public void setRefreshExpiresIn(long refreshExpiresIn) {
+        this.refreshExpiresIn = refreshExpiresIn;
+    }
+
+    public String getTokenType() {
+        return tokenType;
+    }
+
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
     }
 }

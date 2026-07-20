@@ -1,21 +1,34 @@
 package com.arth.auth.utility;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import javax.crypto.SecretKey;
 
 import com.arth.auth.model.AuthProviderType.AuthProviderType;
+import com.arth.auth.model.Role;
 import com.arth.auth.model.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-
 @Component
 public class JwtUtil {
+
+    public static final String CLAIM_USERNAME = "username";
+    public static final String CLAIM_EMAIL = "email";
+    public static final String CLAIM_ROLES = "roles";
 
     @Value("${security.jwt.secret}")
     private String jwtSecret;
@@ -23,37 +36,115 @@ public class JwtUtil {
     @Value("${security.jwt.expiration-ms}")
     private long jwtExpirationMs;
 
-    private static final org.slf4j.Logger log = (Logger) LoggerFactory.getLogger(JwtUtil.class);
+    @Value("${security.jwt.issuer}")
+    private String issuer;
+
+    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
+
+    public long getExpirationMs() {
+        return jwtExpirationMs;
+    }
 
     public String generateToken(User user) {
-        return Jwts.builder().setSubject(user.getUsername())
-                .claim("role", user.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis()+jwtExpirationMs))
-                .signWith(SignatureAlgorithm.HS256, jwtSecret)
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + jwtExpirationMs);
+        List<String> roles = extractRoleNames(user);
+
+        return Jwts.builder()
+                .setSubject(String.valueOf(user.getId()))
+                .setId(UUID.randomUUID().toString())
+                .setIssuer(issuer)
+                .setIssuedAt(now)
+                .setExpiration(expiry)
+                .claim(CLAIM_USERNAME, user.getUsername())
+                .claim(CLAIM_EMAIL, user.getEmail())
+                .claim(CLAIM_ROLES, roles)
+                .signWith(getSigningKey())
                 .compact();
     }
-    public String extractUsername(String token) {
-        return Jwts.parser()
-                .setSigningKey(jwtSecret)
-                .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+
+    public Long extractUserId(String token) {
+        return Long.parseLong(extractAllClaims(token).getSubject());
     }
+
+    public String extractUsername(String token) {
+        return extractAllClaims(token).get(CLAIM_USERNAME, String.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<String> extractRoles(String token) {
+        Object roles = extractAllClaims(token).get(CLAIM_ROLES);
+        if (roles instanceof List<?> roleList) {
+            return roleList.stream().map(String::valueOf).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
+    }
+
+    public String extractJti(String token) {
+        return extractAllClaims(token).getId();
+    }
+
+    public Optional<BlacklistMetadata> extractBlacklistMetadata(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String jti = claims.getId();
+            if (jti == null || jti.isBlank()) {
+                return Optional.empty();
+            }
+            long ttlSeconds = Math.max(1, (claims.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
+            return Optional.of(new BlacklistMetadata(jti, ttlSeconds));
+        } catch (ExpiredJwtException e) {
+            return Optional.empty();
+        } catch (Exception e) {
+            log.warn("Unable to extract blacklist metadata: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token);
+            Claims claims = extractAllClaims(token);
+            if (!issuer.equals(claims.getIssuer())) {
+                log.warn("JWT issuer mismatch: expected {}, got {}", issuer, claims.getIssuer());
+                return false;
+            }
             return true;
         } catch (Exception e) {
+            log.debug("JWT validation failed: {}", e.getMessage());
             return false;
         }
     }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .requireIssuer(issuer)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public record BlacklistMetadata(String jti, long ttlSeconds) {
+    }
+
+    private List<String> extractRoleNames(User user) {
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toList());
+    }
+
     public AuthProviderType getProviderTypeFromRegistrationId(String registrationId) {
-       return switch (registrationId.toLowerCase()) {
+        return switch (registrationId.toLowerCase()) {
             case "google" -> AuthProviderType.GOOGLE;
             case "github" -> AuthProviderType.GITHUB;
             case "facebook" -> AuthProviderType.FACEBOOK;
-
             default -> {
                 log.error("Unsupported OAuth2 provider: {}", registrationId);
                 throw new IllegalArgumentException("Unsupported OAuth2 provider: " + registrationId);
@@ -65,7 +156,6 @@ public class JwtUtil {
         String providerId = switch (registrationId.toLowerCase()) {
             case "google" -> oAuth2User.getAttribute("sub");
             case "github" -> oAuth2User.getAttribute("id").toString();
-
             default -> {
                 log.error("Unsupported OAuth2 provider: {}", registrationId);
                 throw new IllegalArgumentException("Unsupported OAuth2 provider: " + registrationId);
@@ -80,10 +170,6 @@ public class JwtUtil {
     }
 
     public String determineUsernameFromOAuth2User(OAuth2User oAuth2User, String registrationId, String providerId) {
-/*        String email = oAuth2User.getAttribute("email");
-        if (email != null && !email.isBlank()) {
-            return email;
-        }*/
         return switch (registrationId.toLowerCase()) {
             case "google" -> oAuth2User.getAttribute("name");
             case "github" -> oAuth2User.getAttribute("login");
@@ -92,11 +178,10 @@ public class JwtUtil {
     }
 
     public String determineEmailFromOAuth2User(OAuth2User oAuth2User, String registrationId, String providerId) {
-        return switch (registrationId.toLowerCase()){
+        return switch (registrationId.toLowerCase()) {
             case "google" -> oAuth2User.getAttribute("email");
             case "github" -> oAuth2User.getAttribute("email");
             default -> providerId;
         };
     }
 }
-
