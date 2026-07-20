@@ -2,6 +2,7 @@ package com.arth.auth.config;
 
 import com.arth.auth.utility.JwtAuthFilter;
 import com.arth.auth.security.OAuth2SuccessHandler;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +41,7 @@ public class SecurityConfig {
         http.cors(cors -> cors.configurationSource(configurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-/*                .exceptionHandling(exception -> exception
+                .exceptionHandling(exception -> exception
                         .authenticationEntryPoint((request, response, ex) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json");
@@ -50,21 +51,21 @@ public class SecurityConfig {
                             response.setContentType("application/json");
                             response.getWriter().write("{\"errorMessage\":\"Access Denied\"}");
                         })
-                )*/
+                )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/register", "/auth/login", "/auth/refresh", "/auth/logout").permitAll()
+                        .requestMatchers("/auth/register", "/auth/login", "/auth/refresh", "/auth/logout","/error").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .oauth2Login(oAuth2 -> oAuth2.failureHandler((request, response, exception) -> {
                     log.error("OAuth2 login failed: {}", exception.getMessage());
-/*                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json");
                     try {
                         response.getWriter().write("{\"errorMessage\":\"OAuth2 Login Failed\"}");
                     } catch (Exception e) {
                         log.error("Error writing OAuth2 failure response: {}", e.getMessage());
-                    }*/
+                    }
                                  })
                                 .successHandler(oAuth2SuccessHandler)
                 );

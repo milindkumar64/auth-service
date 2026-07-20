@@ -1,6 +1,7 @@
 package com.arth.auth;
 
 import com.arth.auth.dto.LoginResponse;
+import com.arth.auth.dto.LogoutRequest;
 import com.arth.auth.dto.RefreshTokenRequest;
 import com.arth.auth.dto.RegisterRequest;
 import com.arth.auth.dto.UserDetail;
@@ -63,8 +64,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(@Valid @RequestBody RefreshTokenRequest request) {
-        tokenService.revoke(request.getRefreshToken());
+    public ResponseEntity<Map<String, String>> logout(@Valid @RequestBody LogoutRequest request) {
+        tokenService.logout(request.getAccessToken(), request.getRefreshToken());
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 

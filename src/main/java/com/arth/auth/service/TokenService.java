@@ -29,6 +29,7 @@ public class TokenService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
 
@@ -36,9 +37,11 @@ public class TokenService {
     private long refreshExpirationMs;
 
     public TokenService(JwtUtil jwtUtil,
+                        TokenBlacklistService tokenBlacklistService,
                         RefreshTokenRepository refreshTokenRepository,
                         UserRepository userRepository) {
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
         this.refreshTokenRepository = refreshTokenRepository;
         this.userRepository = userRepository;
     }
@@ -96,7 +99,13 @@ public class TokenService {
     }
 
     @Transactional
-    public void revoke(String rawRefreshToken) {
+    public void logout(String accessToken, String rawRefreshToken) {
+        revokeRefreshToken(rawRefreshToken);
+        jwtUtil.extractBlacklistMetadata(accessToken).ifPresent(metadata ->
+                tokenBlacklistService.blacklist(metadata.jti(), metadata.ttlSeconds()));
+    }
+
+    private void revokeRefreshToken(String rawRefreshToken) {
         refreshTokenRepository.findByTokenHash(hashToken(rawRefreshToken))
                 .ifPresent(token -> {
                     token.setRevoked(true);

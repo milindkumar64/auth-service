@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -13,6 +14,7 @@ import com.arth.auth.model.AuthProviderType.AuthProviderType;
 import com.arth.auth.model.Role;
 import com.arth.auth.model.User;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
@@ -82,6 +84,23 @@ public class JwtUtil {
         return extractAllClaims(token).getId();
     }
 
+    public Optional<BlacklistMetadata> extractBlacklistMetadata(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String jti = claims.getId();
+            if (jti == null || jti.isBlank()) {
+                return Optional.empty();
+            }
+            long ttlSeconds = Math.max(1, (claims.getExpiration().getTime() - System.currentTimeMillis()) / 1000);
+            return Optional.of(new BlacklistMetadata(jti, ttlSeconds));
+        } catch (ExpiredJwtException e) {
+            return Optional.empty();
+        } catch (Exception e) {
+            log.warn("Unable to extract blacklist metadata: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
     public boolean validateToken(String token) {
         try {
             Claims claims = extractAllClaims(token);
@@ -107,6 +126,9 @@ public class JwtUtil {
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public record BlacklistMetadata(String jti, long ttlSeconds) {
     }
 
     private List<String> extractRoleNames(User user) {
